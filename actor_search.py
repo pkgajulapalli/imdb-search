@@ -1,12 +1,18 @@
 import imdb
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ia = imdb.IMDb()
 
 
-def run():
-    movies = ia.search_movie('matrix')
-    print(movies[0])
+def get_movie_details(movie_id):
+    movie = ia.get_movie(movie_id)
+    movie_details = {'title': movie.get('title'), 'year': movie.get('year'), 'rating': movie.get('rating')}
+    if movie_details['rating'] is None:
+        movie_details['rating'] = 0.0
+    if movie_details['year'] is None:
+        movie_details['year'] = 0
+    return movie_details
 
 
 def search_movies(actor_name):
@@ -14,16 +20,15 @@ def search_movies(actor_name):
     result = ia.get_person_filmography(actor.personID)
     movies: imdb.Movie.Movie = result['data']['filmography'][0]['actor']
     movie_list = []
-    for m in movies:
-        movie = ia.get_movie(m.getID())
-        new_entry = {'title': movie.get('title'), 'year': movie.get('year'), 'rating': movie.get('rating')}
-        if new_entry['rating'] is None:
-            new_entry['rating'] = 0.0
-        if new_entry['year'] is None:
-            new_entry['year'] = 0
-        movie_list.append(new_entry)
-        if len(movie_list) % 10 == 0:
-            print('Processed %d movies' % (len(movie_list)))
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(get_movie_details, movie.getID()) for movie in movies}
+
+        for future in as_completed(futures):
+            try:
+                movie_list.append(future.result())
+            except Exception as exc:
+                print('Could not process request due to: %s' % exc)
 
     print('Got %d movies of %s' % (len(movie_list), actor_name))
     sorted_movie_list = sorted(movie_list, key=lambda m: (m['rating'], m['year']), reverse=True)
@@ -39,5 +44,5 @@ def search_person(name):
 
 if __name__ == '__main__':
     actor_name = sys.argv[1]
-    print('Searching for movies \'%s\' acted in...' % (actor_name))
+    print('Searching for movies \'%s\' acted in...' % actor_name)
     search_movies(actor_name)
