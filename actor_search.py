@@ -1,6 +1,8 @@
 import imdb
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+import logging.config
 
 ia = imdb.IMDb()
 
@@ -15,8 +17,8 @@ def get_movie_details(movie_id):
     return movie_details
 
 
-def search_movies(actor_name):
-    actor = search_person(actor_name)
+def search_movies(person_name):
+    actor = search_person(person_name)
     result = ia.get_person_filmography(actor.personID)
     movies: imdb.Movie.Movie = result['data']['filmography'][0]['actor']
     movie_list = []
@@ -28,21 +30,22 @@ def search_movies(actor_name):
             try:
                 movie_list.append(future.result())
             except Exception as exc:
-                print('Could not process request due to: %s' % exc)
+                logging.error('Could not process request due to: %s' % exc)
 
-    print('Got %d movies of %s' % (len(movie_list), actor_name))
+    logging.info('Got %d movies of %s' % (len(movie_list), person_name))
     sorted_movie_list = sorted(movie_list, key=lambda m: (m['rating'], m['year']), reverse=True)
     for movie in sorted_movie_list:
-        print('Movie: %s (%d) (%d)' % (movie['title'], movie['rating'], movie['year']))
+        logging.info('Movie: %s (%d) (%d)' % (movie['title'], movie['rating'], movie['year']))
 
 
 def search_person(name):
     people = ia.search_person(name=name)
-    print('Number of people with name \'%s\': %d' % (name, len(people)))
+    logging.info('Number of people with name \'%s\': %d' % (name, len(people)))
     return people[0]
 
 
 if __name__ == '__main__':
+    logging.config.fileConfig('logging.conf')
     actor_name = sys.argv[1]
-    print('Searching for movies \'%s\' acted in...' % actor_name)
+    logging.info('Searching for movies \'%s\' acted in...' % actor_name)
     search_movies(actor_name)
