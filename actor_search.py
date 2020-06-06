@@ -9,18 +9,23 @@ ia = imdb.IMDb()
 
 def get_movie_details(movie_id):
     movie = ia.get_movie(movie_id)
-    movie_details = {'title': movie.get('title'), 'year': movie.get('year'), 'rating': movie.get('rating')}
+    movie_details = {'title': movie.get('title'),
+                     'year': movie.get('year'),
+                     'kind': movie.get('kind'),
+                     'rating': movie.get('rating')}
     if movie_details['rating'] is None:
         movie_details['rating'] = 0.0
     if movie_details['year'] is None:
         movie_details['year'] = 0
+    if movie_details['kind'] is None:
+        movie_details['kind'] = 'NA'
     return movie_details
 
 
 def search_movies(person_name):
     actor = search_person(person_name)
-    logging.info('Actor name %s' % actor.myName)
-    logging.info('Headshot %s' % actor.get_fullsizeURL())
+    logging.info('Actor name: %s' % actor.__str__())
+    logging.info('Image: %s' % actor.get_fullsizeURL())
 
     result = ia.get_person_filmography(actor.personID)
     filmography = result['data']['filmography'][0]
@@ -37,9 +42,9 @@ def search_movies(person_name):
                 logging.error('Could not process request due to: %s' % exc)
 
     logging.info('Got %d movies of %s' % (len(movie_list), person_name))
-    sorted_movie_list = sorted(movie_list, key=lambda m: (m['rating'], m['year']), reverse=True)
+    sorted_movie_list = sorted(movie_list, key=lambda m: (m['kind'], m['rating'], m['year']), reverse=True)
     for movie in sorted_movie_list:
-        logging.info('Movie: %s (%d) (%d)' % (movie['title'], movie['rating'], movie['year']))
+        logging.info('%s (%d) (%d) (%s)' % (movie['title'], movie['rating'], movie['year'], movie['kind']))
 
 
 def search_person(name):
