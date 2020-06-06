@@ -20,7 +20,8 @@ def get_movie_details(movie_id):
 def search_movies(person_name):
     actor = search_person(person_name)
     result = ia.get_person_filmography(actor.personID)
-    movies: imdb.Movie.Movie = result['data']['filmography'][0]['actor']
+    filmography = result['data']['filmography'][0]
+    movies: imdb.Movie.Movie = filmography['actor'] if 'actor' in filmography else filmography['actress']
     movie_list = []
 
     with ThreadPoolExecutor(max_workers=10) as executor:
