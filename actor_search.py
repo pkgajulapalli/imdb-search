@@ -19,6 +19,9 @@ def get_movie_details(movie_id):
 
 def search_movies(person_name):
     actor = search_person(person_name)
+    logging.info('Actor name %s' % actor.myName)
+    logging.info('Headshot %s' % actor.get_fullsizeURL())
+
     result = ia.get_person_filmography(actor.personID)
     filmography = result['data']['filmography'][0]
     movies: imdb.Movie.Movie = filmography['actor'] if 'actor' in filmography else filmography['actress']
