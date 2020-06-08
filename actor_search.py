@@ -50,6 +50,9 @@ def search_movies(person_name):
 def search_person(name):
     people = ia.search_person(name=name)
     logging.info('Number of people with name \'%s\': %d' % (name, len(people)))
+    if (len(people) == 0):
+        logging.info('Couldn\'t find %s in imdb. Please check the spelling.' % name)
+        sys.exit()
     return people[0]
 
 
