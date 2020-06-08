@@ -44,7 +44,7 @@ def search_movies(person_name):
     logging.info('Got %d movies of %s' % (len(movie_list), person_name))
     sorted_movie_list = sorted(movie_list, key=lambda m: (m['kind'], m['rating'], m['year']), reverse=True)
     for movie in sorted_movie_list:
-        logging.info('%s (%d) (%d) (%s)' % (movie['title'], movie['rating'], movie['year'], movie['kind']))
+        logging.info('%s (%.1f) (%d) (%s)' % (movie['title'], movie['rating'], movie['year'], movie['kind']))
 
 
 def search_person(name):
