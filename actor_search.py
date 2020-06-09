@@ -57,7 +57,7 @@ def search_person(name):
 
 
 if __name__ == '__main__':
-    logging.config.fileConfig('logging.conf')
+    logging.config.fileConfig(os.path.dirname(os.path.realpath(__file__)) + '/logging.conf')
     actor_name = sys.argv[1]
     logging.info('Searching for movies \'%s\' acted in...' % actor_name)
     search_movies(actor_name)
