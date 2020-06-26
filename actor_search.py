@@ -23,14 +23,26 @@ def get_movie_details(movie_id):
     return movie_details
 
 
+def get_movies(filmography):
+    for entry in filmography:
+        if 'actor' in entry:
+            return entry['actor']
+        elif 'actress' in entry:
+            return entry['actress']
+    return None
+
+
 def search_movies(person_name):
     actor = search_person(person_name)
     logging.info('Actor name: %s' % actor.__str__())
     logging.info('Image: %s' % actor.get_fullsizeURL())
 
     result = ia.get_person_filmography(actor.personID)
-    filmography = result['data']['filmography'][0]
-    movies: imdb.Movie.Movie = filmography['actor'] if 'actor' in filmography else filmography['actress']
+    # filmography = result['data']['filmography'][0]
+    movies: imdb.Movie.Movie = get_movies(result['data']['filmography'])
+    if movies is None:
+        logging.error('Couldn\'t find any movies %s acted in' % actor.__str__())
+        exit(1)
     movie_list = []
 
     with ThreadPoolExecutor(max_workers=10) as executor:
