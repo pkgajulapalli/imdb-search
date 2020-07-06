@@ -1,5 +1,6 @@
 import os
 import imdb
+from itertools import groupby
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
@@ -7,14 +8,13 @@ import logging.config
 
 ia = imdb.IMDb()
 
-contribution_type = ['actor', 'actress', 'director', 'producer', 'writer', 'cinematographer', 'editor']
 
-
-def get_movie_details(movie_id):
+def get_movie_details(movie_id, contribution_type):
     movie = ia.get_movie(movie_id)
     movie_details = {'title': movie.get('title'),
                      'year': movie.get('year'),
                      'kind': movie.get('kind'),
+                     'contribution_type': contribution_type,
                      'rating': movie.get('rating')}
     if movie_details['rating'] is None:
         movie_details['rating'] = 0.0
@@ -28,23 +28,25 @@ def get_movie_details(movie_id):
 def get_movies(filmography):
     movie_list = []
     for entry in filmography:
-        for key in entry.keys():
-            # if key in entry:
-            movie_list.extend(entry[key])
-    return set(movie_list)
+        for contribution_type in entry.keys():
+            for movie in entry[contribution_type]:
+                movie_list.append((movie.getID(), contribution_type))
+    movie_list.sort(key=lambda m: m[0])
+    return [(key, ', '.join(j for i, j in group)) for key, group in groupby(movie_list, key=lambda x: x[0])]
 
 
 def search_movies(name):
-    actor = search_person(name)
-    logging.info('Name: %s' % actor.__str__())
-    logging.info('Image: %s' % actor.get_fullsizeURL())
+    person = search_person(name)
+    logging.info('Name: %s' % person.__str__())
+    logging.info('Image: %s' % person.get_fullsizeURL())
 
-    result = ia.get_person_filmography(actor.personID)
+    result = ia.get_person_filmography(person.personID)
     movies = get_movies(result['data']['filmography'])
     movie_list = []
 
+    print('Getting results of %d projects' % len(movies))
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(get_movie_details, movie.getID()) for movie in movies}
+        futures = {executor.submit(get_movie_details, movie[0], movie[1]) for movie in movies}
 
         for future in as_completed(futures):
             try:
@@ -55,7 +57,8 @@ def search_movies(name):
     logging.info('Got %d movies of %s' % (len(movie_list), name))
     sorted_movie_list = sorted(movie_list, key=lambda m: (m['kind'], m['rating'], m['year']), reverse=True)
     for movie in sorted_movie_list:
-        logging.info('%s (%.1f) (%d) (%s)' % (movie['title'], movie['rating'], movie['year'], movie['kind']))
+        logging.info('%s (%.1f) (%d) (%s) (%s)' % (
+            movie['title'], movie['rating'], movie['year'], movie['kind'], movie['contribution_type']))
 
 
 def search_person(name):
