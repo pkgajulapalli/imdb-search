@@ -7,6 +7,8 @@ import logging.config
 
 ia = imdb.IMDb()
 
+contribution_type = ['actor', 'actress', 'director', 'producer', 'writer', 'cinematographer', 'editor']
+
 
 def get_movie_details(movie_id):
     movie = ia.get_movie(movie_id)
@@ -24,25 +26,21 @@ def get_movie_details(movie_id):
 
 
 def get_movies(filmography):
+    movie_list = []
     for entry in filmography:
-        if 'actor' in entry:
-            return entry['actor']
-        elif 'actress' in entry:
-            return entry['actress']
-    return None
+        for key in entry.keys():
+            # if key in entry:
+            movie_list.extend(entry[key])
+    return set(movie_list)
 
 
-def search_movies(person_name):
-    actor = search_person(person_name)
-    logging.info('Actor name: %s' % actor.__str__())
+def search_movies(name):
+    actor = search_person(name)
+    logging.info('Name: %s' % actor.__str__())
     logging.info('Image: %s' % actor.get_fullsizeURL())
 
     result = ia.get_person_filmography(actor.personID)
-    # filmography = result['data']['filmography'][0]
-    movies: imdb.Movie.Movie = get_movies(result['data']['filmography'])
-    if movies is None:
-        logging.error('Couldn\'t find any movies %s acted in' % actor.__str__())
-        exit(1)
+    movies = get_movies(result['data']['filmography'])
     movie_list = []
 
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -54,7 +52,7 @@ def search_movies(person_name):
             except Exception as exc:
                 logging.error('Could not process request due to: %s' % exc)
 
-    logging.info('Got %d movies of %s' % (len(movie_list), person_name))
+    logging.info('Got %d movies of %s' % (len(movie_list), name))
     sorted_movie_list = sorted(movie_list, key=lambda m: (m['kind'], m['rating'], m['year']), reverse=True)
     for movie in sorted_movie_list:
         logging.info('%s (%.1f) (%d) (%s)' % (movie['title'], movie['rating'], movie['year'], movie['kind']))
@@ -63,7 +61,7 @@ def search_movies(person_name):
 def search_person(name):
     people = ia.search_person(name=name)
     logging.info('Number of people with name \'%s\': %d' % (name, len(people)))
-    if (len(people) == 0):
+    if len(people) == 0:
         logging.info('Couldn\'t find %s in imdb. Please check the spelling.' % name)
         sys.exit()
     return people[0]
@@ -71,6 +69,6 @@ def search_person(name):
 
 if __name__ == '__main__':
     logging.config.fileConfig(os.path.dirname(os.path.realpath(__file__)) + '/logging.conf')
-    actor_name = sys.argv[1]
-    logging.info('Searching for movies \'%s\' acted in...' % actor_name)
-    search_movies(actor_name)
+    person_name = sys.argv[1]
+    logging.info('Searching for movies \'%s\' has been part of...' % person_name)
+    search_movies(person_name)

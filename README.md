@@ -10,7 +10,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```shell script
-python actor_search.py Leonardo\ Decaprio
+python movie_search.py Leonardo\ Decaprio
 ```
 
 ## Contributing
