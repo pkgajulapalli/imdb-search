@@ -7,13 +7,20 @@ import logging
 import logging.config
 
 ia = imdb.IMDb()
+short_movie_genre = 'Short'
 
 
 def get_movie_details(movie_id, contribution_type):
     movie = ia.get_movie(movie_id)
+    short_movie_kind_prefix = ''
+    try:
+        short_movie_kind_prefix = 'Short ' if short_movie_genre in movie['genres'] else ''
+    except:
+        pass
+
     movie_details = {'title': movie.get('title'),
                      'year': movie.get('year'),
-                     'kind': movie.get('kind'),
+                     'kind': short_movie_kind_prefix + movie.get('kind'),
                      'contribution_type': contribution_type,
                      'rating': movie.get('rating')}
     if movie_details['rating'] is None:
