@@ -34,10 +34,9 @@ def get_movie_details(movie_id, contribution_type):
 
 def get_movies(filmography):
     movie_list = []
-    for entry in filmography:
-        for contribution_type in entry.keys():
-            for movie in entry[contribution_type]:
-                movie_list.append((movie.getID(), contribution_type))
+    for contribution_type in filmography.keys():
+        for movie in filmography[contribution_type]:
+            movie_list.append((movie.getID(), contribution_type))
     movie_list.sort(key=lambda m: m[0])
     return [(key, ', '.join(j for i, j in group)) for key, group in groupby(movie_list, key=lambda x: x[0])]
 
