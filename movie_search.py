@@ -1,12 +1,12 @@
 import os
-import imdb
+from imdb import Cinemagoer
 from itertools import groupby
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 import logging.config
 
-ia = imdb.IMDb()
+ia = Cinemagoer()
 short_movie_genre = 'Short'
 
 
